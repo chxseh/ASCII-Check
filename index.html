@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Check for non-ASCII</title>
+
+    <style>
+        body {
+            background: #ececec;
+            font-family: monospace;
+        }
+
+        #src {
+            margin: 0px auto;
+            width: 800px;
+            height: 500px;
+        }
+
+        #report {
+            margin-top: 20px;
+        }
+
+        #checkbtn {
+            background: #0080ff;
+            cursor: pointer;
+            font-size: 2em;
+        }
+
+        /* Style to highlight quotes from src code */
+        .quote {
+            background: #CCC;
+            border: #333 1px solid;
+            color: #999;
+            padding: 3px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+
+        /* Highlight offending characters in red */
+        .evil {
+            background: #ffb4b4;
+            color: red;
+        }
+    </style>
+
+    <script>
+        // find non-ASCII characters in str and return a list of their indices in the string
+        function find_non_ascii(str)
+        {
+            var non_ascii = [];
+
+            for (var i = 0; i < str.length; i++)
+            {
+                // find character codes outside of normal ascii characters
+                if (str.charCodeAt(i) > 127)
+                {
+                    non_ascii.push(i);
+                }
+            }
+
+            return non_ascii;
+        }
+
+        // Generate a sample of 10 characters on either side of the offending one
+        function around(non_ascii, str)
+        {
+            var start = Math.max(non_ascii - 20, 0);
+            var end = Math.min(non_ascii + 20, str.length);
+
+            // get beginning of sample
+            var sample = str.substring(start, non_ascii);
+
+            // add the offending character itself (with different style)
+            sample += "<span class='evil'>" + str.substring(non_ascii, non_ascii + 1) + "</span>";
+
+            // add the rest
+            sample += str.substring(non_ascii + 1, end);
+
+            // replace \n with <br /> and \t with 4 spaces so that code is indented
+            sample = sample.split("\n").join("<br />");
+            sample = sample.split("\t").join("    ");
+
+            return sample
+        }
+
+        // display the offending characters or a message that none were found
+        function display_report(non_ascii, str)
+        {
+            var report_div = document.getElementById("report");
+
+            if (non_ascii.length == 0)
+            {
+                report_div.innerHTML = "<span style='color: green'>No non-ASCII characters found :D</span>";
+            } else
+            {
+                report_div.innerHTML = "Non-ASCII characters found (highlighted in red)<br />";
+                for (var i = 0; i < non_ascii.length; i++)
+                {
+                    report_div.innerHTML += "[Character #" + (non_ascii[i] + 1)
+                        + "] <span class='quote'>" + around(non_ascii[i], str)
+                        + "</span><br /><br />";
+                }
+            }
+        }
+
+        // clear the report div
+        function clear_report()
+        {
+            document.getElementById('report').innerHTML = '';
+        }
+
+        // click handler
+        function check()
+        {
+            // get the contents of the textarea (i.e. the code)
+            var src_textarea = document.getElementById("src");
+            var src = src_textarea.value;
+
+            // check the code
+            var non_ascii = find_non_ascii(src);
+
+            // display a report
+            display_report(non_ascii, src);
+        }
+    </script>
+</head>
+
+<body>
+    <h2>Copy/paste your string here to check for non-ASCII characters:</h2>
+    <textarea id="src" onkeyup="clear_report(); check();"></textarea><br />
+
+    <div id="report"></div>
+</body>
+
+</html>
